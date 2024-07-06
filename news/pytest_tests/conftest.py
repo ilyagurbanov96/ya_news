@@ -1,6 +1,8 @@
 import pytest
 from news.models import News, Comment
 from django.test.client import Client
+from django.conf import settings
+from datetime import datetime, timedelta
 
 
 @pytest.fixture
@@ -50,6 +52,17 @@ def comment(author):
 
 
 @pytest.fixture
+def all_news():
+    today = datetime.today()
+    News.objects.bulk_create(
+        News(title=f'Новость {index}', text='Просто текст.',
+             date=today - timedelta(days=index))
+        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
+    )
+    return all_news
+
+
+@pytest.fixture
 def pk_for_args(news):
     return (news.pk,)
 
@@ -57,6 +70,6 @@ def pk_for_args(news):
 @pytest.fixture
 def form_data():
     return {
-        'text': 'Новый текст',
+        'text': 'BAD_WORDS[0]',
         'author': 'author'
     }
