@@ -1,8 +1,7 @@
 from http import HTTPStatus
-from news.models import News
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.urls import reverse
 
 from news.models import Comment, News
