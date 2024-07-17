@@ -27,8 +27,8 @@ def test_news_order(client, all_news, url_home):
 
 
 def test_comments_order(client, comments, url_detail):
-    """Комментарии на странице отдельной новости отсортированы
-    в хронологическом порядке: старые в начале списка, новые — в конце.
+    """Комментарии на странице отдельной новости отсортированы.
+    Cтарые в начале списка, новые — в конце.
     """
     response = client.get(url_detail)
     assert 'news' in response.context
@@ -40,16 +40,16 @@ def test_comments_order(client, comments, url_detail):
 
 
 def test_anonymous_client_has_no_form(client, comment, url_detail):
-    """Анонимному пользователю недоступна форма для отправки
-    комментария на странице отдельной новости
+    """Анонимному пользователю недоступна форма для отправки комментария.
+    На странице отдельной новости.
     """
     response = client.get(url_detail)
     assert 'form' not in response.context
 
 
 def test_authorized_client_has_form(client, author, comment, url_detail):
-    """Авторизованному пользователю доступна форма для отправки
-    комментария на странице отдельной новости
+    """Авторизованному пользователю доступна форма для отправки комментария.
+    На странице отдельной новости
     """
     client.force_login(author)
     response = client.get(url_detail)

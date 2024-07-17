@@ -1,51 +1,40 @@
 from http import HTTPStatus
 
 import pytest
-from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 
 pytestmark = pytest.mark.django_db
 
-HOME = 'news:home'
-DETAIL = 'news:detail'
-LOGIN = 'users:login'
-LOGOUT = 'users:logout'
-SIGNUP = 'users:signup'
-EDIT = 'news:edit'
-DELETE = 'news:delete'
+HOME = pytest.lazy_fixture('url_home')
+DETAIL = pytest.lazy_fixture('url_detail')
+LOGIN = pytest.lazy_fixture('url_login')
+LOGOUT = pytest.lazy_fixture('url_logout')
+SIGNUP = pytest.lazy_fixture('url_signup')
+EDIT = pytest.lazy_fixture('url_edit')
+DELETE = pytest.lazy_fixture('url_delete')
+ANONIM = pytest.lazy_fixture('client')
+NOT_AUTHOR = pytest.lazy_fixture('not_author_client')
+AUTHOR = pytest.lazy_fixture('author_client')
 
 
 @pytest.mark.parametrize(
-    'name, object, parametrized_client, expected_status',
+    'name, parametrized_client, expected_status',
     (
-        (HOME, None,
-         pytest.lazy_fixture('client'), HTTPStatus.OK),
-        (DETAIL, pytest.lazy_fixture('news'),
-         pytest.lazy_fixture('client'), HTTPStatus.OK),
-        (LOGIN, None,
-         pytest.lazy_fixture('client'), HTTPStatus.OK),
-        (LOGOUT, None,
-         pytest.lazy_fixture('client'), HTTPStatus.OK),
-        (SIGNUP, None,
-         pytest.lazy_fixture('client'), HTTPStatus.OK),
-        (EDIT, pytest.lazy_fixture('comment'),
-         pytest.lazy_fixture('author_client'), HTTPStatus.OK),
-        (DELETE, pytest.lazy_fixture('comment'),
-         pytest.lazy_fixture('author_client'), HTTPStatus.OK),
-        (EDIT, pytest.lazy_fixture('comment'),
-         pytest.lazy_fixture('not_author_client'), HTTPStatus.NOT_FOUND),
-        (DELETE, pytest.lazy_fixture('comment'),
-         pytest.lazy_fixture('not_author_client'), HTTPStatus.NOT_FOUND),
+        (HOME, ANONIM, HTTPStatus.OK),
+        (DETAIL, ANONIM, HTTPStatus.OK),
+        (LOGIN, ANONIM, HTTPStatus.OK),
+        (LOGOUT, ANONIM, HTTPStatus.OK),
+        (SIGNUP, ANONIM, HTTPStatus.OK),
+        (EDIT, AUTHOR, HTTPStatus.OK),
+        (DELETE, AUTHOR, HTTPStatus.OK),
+        (EDIT, NOT_AUTHOR, HTTPStatus.NOT_FOUND),
+        (DELETE, NOT_AUTHOR, HTTPStatus.NOT_FOUND),
     ),
 )
 def test_pages_availability_for_anonymous_user(parametrized_client, name,
-                                               expected_status, object):
-    """Доступность урлов анонимному пользователю"""
-    if object is not None:
-        url = reverse(name, args=(object.id,))
-    else:
-        url = reverse(name)
-    response = parametrized_client.get(url)
+                                               expected_status):
+    """Доступность урлов анонимному пользователю."""
+    response = parametrized_client.get(name)
     assert response.status_code == expected_status
 
 
@@ -56,10 +45,8 @@ def test_pages_availability_for_anonymous_user(parametrized_client, name,
         (DELETE, LOGIN),
     ),
 )
-def test_redirects(client, name, comment, redirect):
+def test_redirects(client, name, redirect):
     """Редирект анонимного пользователя."""
-    login_url = reverse(redirect)
-    url = reverse(name, args=(comment.id,))
-    expected_url = f'{login_url}?next={url}'
-    response = client.get(url)
+    expected_url = f'{redirect}?next={name}'
+    response = client.get(name)
     assertRedirects(response, expected_url)

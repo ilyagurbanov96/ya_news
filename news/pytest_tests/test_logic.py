@@ -33,7 +33,7 @@ def test_anonymous_user_cant_create_comment(client, form_data,
 
 
 def test_author_can_edit_comment(author_client, form_data, url_edit,
-                                 comment, author, url_detail_comment):
+                                 comment, news, author, url_detail_comment):
     """Автор может редактировать коментарий"""
     comment_count = Comment.objects.count()
     response = author_client.post(url_edit, form_data)
@@ -42,6 +42,7 @@ def test_author_can_edit_comment(author_client, form_data, url_edit,
     assert Comment.objects.count() == comment_count
     assert new_comment.text == form_data['text']
     assert new_comment.author == author
+    assert new_comment.news == comment.news
 
 
 def test_author_can_delete_comment(author_client, comment,
@@ -54,7 +55,7 @@ def test_author_can_delete_comment(author_client, comment,
 
 
 def test_not_author_cant_edit_comment(not_author_client, form_data,
-                                      comment, author, url_edit):
+                                      comment, author, url_edit, news):
     """Авторизованный пользователь не может редактировать чужие комментарии."""
     comment_count = Comment.objects.count()
     response = not_author_client.post(url_edit, form_data)
@@ -63,6 +64,7 @@ def test_not_author_cant_edit_comment(not_author_client, form_data,
     comment_from_db = Comment.objects.get(id=comment.id)
     assert comment_from_db.text == comment.text
     assert comment_from_db.author == author
+    assert comment_from_db.news == comment.news
 
 
 def test_not_author_cant_delete_comment(not_author_client,
@@ -77,8 +79,8 @@ def test_not_author_cant_delete_comment(not_author_client,
 
 
 def test_user_cant_use_bad_words(author_client, url_detail):
-    """Если комментарий содержит запрещённые слова,
-    он не будет опубликован, а форма вернёт ошибку.
+    """Комментарий содержащий запрещённые слова, не будет опубликован.
+    А форма вернёт ошибку.
     """
     bad_words_data = {'text': f'Какой-то текст, {BAD_WORDS[0]}, еще текст'}
     comment_count = Comment.objects.count()
